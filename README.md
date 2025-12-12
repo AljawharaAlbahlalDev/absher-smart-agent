@@ -117,7 +117,7 @@ return {
 };
 ```
 
-#*** Multi-agent logic (Router + Domain Agents) Prompt in workflow**
+## ** Multi-agent logic (Router + Domain Agents) Prompt in workflow**
 ```
 You are the Residency Agent. Your scope includes residency services only. 
 Your job is to validate and authorize the execution of the "renew_iqama" service.
