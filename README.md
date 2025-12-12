@@ -69,22 +69,6 @@ The MVP integrates with **n8n** to execute government-style workflows:
 * Human-in-the-loop review optional
 * Final action executed (e.g., simulate Renew Iqama)
 
-This architecture mirrors real government automation pipelines.
-
-## **📂 Project Structure**
-```
-/absher-smart-agent
-│
-├── absher-agent.html.html                # Main UI (chat interface MVP)
-├── assets/                  # UI images, icons, diagrams
-│
-├── Absher-workflow-agent.json/               # n8n workflow JSON files
-│   ├── router-agent.json
-│   ├── residency-agent.json
-│   ├── renew-iqama.json
-│
-├── README.md                # Documentation
-```
 ## **📄 Documentation Included**
 * System architecture diagrams
 * Multi-assistant design overview
