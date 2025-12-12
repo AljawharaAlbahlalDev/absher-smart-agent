@@ -78,6 +78,119 @@ The MVP integrates with **n8n** to execute government-style workflows:
 * n8n workflow explanation
 * MVP demo steps
 
+## **Guardrails validation design**
+```
+const item = { ...$json };
+
+const allowedActions = ['renew_iqama', 'renew_id', 'book_license'];
+const allowedDomains = ['residency', 'identity', 'traffic'];
+
+item.action = item.action || 'none';
+item.domain = item.domain || 'unknown';
+item.risk_level = item.risk_level || 'medium';
+
+item.user_id = item.parameters?.user_id ?? item.user_id ?? 1;
+
+item.sessionId = item.session_id || `user-${item.user_id}`;
+item.requestId = item.requestId || `${item.sessionId}-${Date.now()}`;
+
+if (!allowedActions.includes(item.action) || !allowedDomains.includes(item.domain)) {
+  item.guardrailStatus = 'blocked';
+  item.guardrailReason = 'خدمة أو مجال غير مدعومين في هذا الإصدار من المساعد.';
+  item.action = 'none';
+} else {
+  item.guardrailStatus = 'allowed';
+  item.guardrailReason = null;
+}
+
+const missing = item.parameters?.missing_fields || [];
+if (missing.length > 0) {
+  item.guardrailStatus = 'blocked';
+  item.guardrailReason = 'هناك حقول ناقصة يجب استكمالها قبل تنفيذ الخدمة.';
+  item.action = 'none';
+}
+
+item.needsUserApproval = item.risk_level === 'high';
+
+return {
+  json: item,
+};
+```
+
+#*** Multi-agent logic (Router + Domain Agents) Prompt in workflow**
+```
+You are the Residency Agent. Your scope includes residency services only. 
+Your job is to validate and authorize the execution of the "renew_iqama" service.
+
+You ALWAYS return pure JSON ONLY without any explanation or text outside the JSON object.
+
+INPUT FORMAT (example):
+{
+  "action": "renew_iqama",
+  "domain": "residency",
+  "parameters": {
+    "nationalId": "...",
+    "iqamaNumber": "...",
+    "missing_fields": []
+  },
+  "sessionId": "...",
+  "requestId": "..."
+}
+
+YOUR DECISION RULES:
+
+1) Only proceed if:
+   - action = "renew_iqama"
+   - domain = "residency"
+   Otherwise, return:
+   {
+     "can_execute": false,
+     "service": "renew_iqama",
+     "reason": "هذه الخدمة ليست ضمن نطاق وكيل الإقامة.",
+     "sessionId": "<sessionId>",
+     "requestId": "<requestId>"
+   }
+
+2) Required fields are ONLY:
+   - nationalId
+   - iqamaNumber
+
+   Treat missing_fields = [] as valid. Do NOT consider it missing data.
+
+   A field is missing ONLY if it is:
+   - not present, OR
+   - empty string ""
+
+   If data is incomplete, return:
+   {
+     "can_execute": false,
+     "service": "renew_iqama",
+     "reason": "البيانات غير مكتملة، نحتاج رقم الهوية ورقم الإقامة قبل تنفيذ التجديد.",
+     "sessionId": "<sessionId>",
+     "requestId": "<requestId>"
+   }
+
+3) If data is complete and valid, return:
+   {
+     "can_execute": true,
+     "service": "renew_iqama",
+     "payload": {
+       "nationalId": "<from input>",
+       "iqamaNumber": "<from input>"
+     },
+     "sessionId": "<sessionId>",
+     "requestId": "<requestId>"
+   }
+
+RULES:
+- Output MUST be valid JSON only.
+- Never include commentary, explanation, markdown, or text outside the JSON.
+- Follow the structure exactly as defined above.
+```
+
+
+ 
+
 ## **🎯 Current Scope (MVP)**
 * 30% of the full user journey implemented
 * Renew Iqama scenario fully operational
