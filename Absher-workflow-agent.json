@@ -1,0 +1,862 @@
+{
+  "name": "Absher Residency Renewal - MVP",
+  "nodes": [
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.action }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "renew_iqama"
+            },
+            {
+              "value2": "renew_id",
+              "output": 1
+            },
+            {
+              "value2": "book_license",
+              "output": 2
+            }
+          ]
+        },
+        "fallbackOutput": 3
+      },
+      "id": "74179aed-bf68-4d5b-84a8-f92717267954",
+      "name": "7. Switch - Action",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        -4704,
+        2528
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return [\n  {\n    json: {\n      reply: \"تم تجديد الإقامة بنجاح 🎉\",\n      status: \"success\",\n      action: \"renew_iqama\",\n      sessionId: $json.sessionId,\n      requestId: $json.requestId\n    }\n  }\n];\n"
+      },
+      "id": "c6250e53-9155-4d7d-bd70-a1c41b99e152",
+      "name": "8c. Execute Renew Iqama",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -2752,
+        1552
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"reply\": \"={{$json.reply}}\",\n  \"status\": \"={{$json.status || 'ok'}}\",\n  \"action\": \"={{$json.action || ($json.parameters && $json.parameters.service_name) || ''}}\",\n  \"sessionId\": \"={{$json.sessionId}}\",\n  \"requestId\": \"={{$json.requestId}}\"\n}\n",
+        "options": {}
+      },
+      "id": "d8c9655e-1ba5-41af-8c54-e41c8aae336a",
+      "name": "9. Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -2192,
+        2000
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return [{\n  json: {\n    message: $json.body?.message || '',\n    user_id: $json.body?.user_id || null,\n    session_id: $json.body?.session_id || null,\n    request_id: $json.body?.request_id || null\n  }\n}];\n"
+      },
+      "id": "d25a7d0e-aba9-4691-bbaa-d6bf770025b5",
+      "name": "Prepare Text1",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -5760,
+        2560
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return [\n  {\n    json: {\n      reply: `تم حجز موعد رخصة القيادة بنجاح.`,\n      status: \"success\",\n      action: \"book_license\",\n      sessionId: $json.sessionId,\n      requestId: $json.requestId\n    }\n  }\n];\n"
+      },
+      "id": "58d6a46f-0387-4751-9d90-b3cf7bf86db8",
+      "name": "8e. Execute Book License",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -2736,
+        1952
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return [\n  {\n    json: {\n      reply: `تم تجديد الهوية الوطنية بنجاح.`,\n      status: \"success\",\n      action: \"renew_id\",\n      sessionId: $json.sessionId,\n      requestId: $json.requestId\n    }\n  }\n];\n"
+      },
+      "id": "8a41a1b2-a878-46ee-b65e-4558132996e1",
+      "name": "8d. Execute Renew ID",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -2736,
+        1760
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "absher-agent",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "d4da4282-3913-491a-bd0f-226a26a82cc1",
+      "name": "Webhook - Absher1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -6016,
+        2560
+      ],
+      "webhookId": "1d82f1f0-9300-47ac-87d3-2a0b7070855c"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const reason = $json.guardrailReason || 'لم أفهم نوع الخدمة المطلوبة، أو أنها غير مدعومة حالياً.';\n\nreturn {\n  reply: reason,\n  status: 'blocked',\n  action: $json.action || 'none',\n  sessionId: $json.sessionId,\n  requestId: $json.requestId\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2480,
+        2592
+      ],
+      "id": "270e7272-0177-420c-b981-9b832cbb0996",
+      "name": "unknown action1"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-robotics-er-1.5-preview",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -5584,
+        2800
+      ],
+      "id": "876c1369-129c-4780-ba59-21178288bb89",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "EYkPCKlEhOjBKqMU",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "absher-session",
+        "contextWindowLength": 16
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -5424,
+        2816
+      ],
+      "id": "21748238-751c-4dd1-9ca0-75e69d54f62a",
+      "name": "Simple Memory1"
+    },
+    {
+      "parameters": {
+        "jsCode": "let raw = $json.output;\n\n// Remove anything before first '{'\nraw = raw.slice(raw.indexOf('{'));\n\n// Remove anything after last '}'\nraw = raw.slice(0, raw.lastIndexOf('}') + 1);\n\n// Now parse\nreturn JSON.parse(raw);\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -5216,
+        2560
+      ],
+      "id": "684765bf-2fd2-4feb-995c-82c2f5204c57",
+      "name": "normlizeResponse1"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ناخذ الـ JSON الناتج من Absher AI Agent بعد normalize\nconst item = { ...$json };\n\n// --- 1) إعداد قيم أساسية ---\nconst allowedActions = ['renew_iqama', 'renew_id', 'book_license'];\nconst allowedDomains = ['residency', 'identity', 'traffic'];\n\nitem.action = item.action || 'none';\nitem.domain = item.domain || 'unknown';\nitem.risk_level = item.risk_level || 'medium';\n\n// نحاول نقرأ user_id من parameters أو من الجذر\nitem.user_id = item.parameters?.user_id ?? item.user_id ?? 1;\n\n// --- 2) Concurrency Metadata (session / request) ---\nitem.sessionId = item.session_id || `user-${item.user_id}`;\nitem.requestId = item.requestId || `${item.sessionId}-${Date.now()}`;\n\n// --- 3) Guardrails على الـ action / domain ---\nif (!allowedActions.includes(item.action) || !allowedDomains.includes(item.domain)) {\n  item.guardrailStatus = 'blocked';\n  item.guardrailReason = 'خدمة أو مجال غير مدعومين في هذا الإصدار من المساعد.';\n  item.action = 'none';\n} else {\n  item.guardrailStatus = 'allowed';\n  item.guardrailReason = null;\n}\n\n// --- 4) Guardrails على الحقول الناقصة ---\nconst missing = item.parameters?.missing_fields || [];\nif (missing.length > 0) {\n  item.guardrailStatus = 'blocked';\n  item.guardrailReason = 'هناك حقول ناقصة يجب استكمالها قبل تنفيذ الخدمة.';\n  item.action = 'none';\n}\n\n// --- 5) Policy حسب مستوى الخطورة ---\nitem.needsUserApproval = item.risk_level === 'high';\n\n// نرجّع عنصر واحد فقط\nreturn {\n  json: item,\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4992,
+        2560
+      ],
+      "id": "00d2fe5a-6436-4c72-bf47-75ffed8b0c37",
+      "name": "Master Policy & Guardrails1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message }}\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "أنت Router Agent داخل منصة \"أبشر\".\n\nيصل إليك المدخل على شكل JSON يحتوي عادة على:\n{\n  \"message\": \"<طلب المستخدم بالعربية>\",\n  \"user_id\": {{ $json.user_id }},\n  \"session_id\": \"{{ $json.session_id }}\",\n  \"request_id\": \"{{ $json.request_id }}\"\n}\n\nلدينا ملف مستخدم وهمي (User Profile Mock) ثابت لهذا النموذج التجريبي:\n{\n  \"user_profile\": {\n    \"user_id\": {{ $json.user_id }},\n    \"nationalId\": \"1234567890\",\n    \"iqamaNumber\": \"9876543210\"\n  }\n}\n\nمهمتك:\n\n1) فهم نية المستخدم (Intent) من النص.\n2) اختيار:\n   - action واحد من: [\"renew_iqama\", \"renew_id\", \"book_license\", \"none\"]\n   - domain واحد من: [\"residency\", \"identity\", \"traffic\", \"unknown\"]\n   - risk_level واحد من: [\"low\", \"medium\", \"high\"]\n\n3) تجهيز حقل parameters بالاعتماد على user_profile:\n   - user_id = من JSON المدخل\n   - service_name = اسم الخدمة بالعربي (مثال: \"تجديد إقامة\")\n   - nationalId = من user_profile.nationalId\n   - iqamaNumber = من user_profile.iqamaNumber (في حالة تجديد الإقامة)\n   - missing_fields = [] في هذا النموذج\n\n4) انسخ sessionId و requestId كما هي من JSON المدخل.\n\n5) أرجع دائماً **JSON صالح فقط** بهذا الشكل (بدون أي شرح خارجي، بدون ```):\n\n{\n  \"action\": \"<renew_iqama | renew_id | book_license | none>\",\n  \"domain\": \"<residency | identity | traffic | unknown>\",\n  \"risk_level\": \"<low | medium | high>\",\n  \"parameters\": {\n    \"user_id\": {{ $json.user_id }},\n    \"service_name\": \"<اسم الخدمة بالعربي>\",\n    \"nationalId\": \"1234567890\",\n    \"iqamaNumber\": \"9876543210\",\n    \"missing_fields\": []\n  },\n  \"sessionId\": \"{{ $json.session_id }}\",\n  \"requestId\": \"{{ $json.request_id }}\"\n}\n\nإذا لم تستطع فهم الطلب أو كان خارج نطاق الخدمات المدعومة، اجعل:\n- action = \"none\"\n- domain = \"unknown\"\nولا تضف أي نص آخر خارج JSON.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -5504,
+        2560
+      ],
+      "id": "fa945f49-cac5-4069-8eb4-32fa58a9da0b",
+      "name": "AI Router Agent"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "You are the Residency Agent. Your scope includes residency services only. \nYour job is to validate and authorize the execution of the \"renew_iqama\" service.\n\nYou ALWAYS return pure JSON ONLY without any explanation or text outside the JSON object.\n\nINPUT FORMAT (example):\n{\n  \"action\": \"renew_iqama\",\n  \"domain\": \"residency\",\n  \"parameters\": {\n    \"nationalId\": \"...\",\n    \"iqamaNumber\": \"...\",\n    \"missing_fields\": []\n  },\n  \"sessionId\": \"...\",\n  \"requestId\": \"...\"\n}\n\nYOUR DECISION RULES:\n\n1) Only proceed if:\n   - action = \"renew_iqama\"\n   - domain = \"residency\"\n   Otherwise, return:\n   {\n     \"can_execute\": false,\n     \"service\": \"renew_iqama\",\n     \"reason\": \"هذه الخدمة ليست ضمن نطاق وكيل الإقامة.\",\n     \"sessionId\": \"<sessionId>\",\n     \"requestId\": \"<requestId>\"\n   }\n\n2) Required fields are ONLY:\n   - nationalId\n   - iqamaNumber\n\n   Treat missing_fields = [] as valid. Do NOT consider it missing data.\n\n   A field is missing ONLY if it is:\n   - not present, OR\n   - empty string \"\"\n\n   If data is incomplete, return:\n   {\n     \"can_execute\": false,\n     \"service\": \"renew_iqama\",\n     \"reason\": \"البيانات غير مكتملة، نحتاج رقم الهوية ورقم الإقامة قبل تنفيذ التجديد.\",\n     \"sessionId\": \"<sessionId>\",\n     \"requestId\": \"<requestId>\"\n   }\n\n3) If data is complete and valid, return:\n   {\n     \"can_execute\": true,\n     \"service\": \"renew_iqama\",\n     \"payload\": {\n       \"nationalId\": \"<from input>\",\n       \"iqamaNumber\": \"<from input>\"\n     },\n     \"sessionId\": \"<sessionId>\",\n     \"requestId\": \"<requestId>\"\n   }\n\nRULES:\n- Output MUST be valid JSON only.\n- Never include commentary, explanation, markdown, or text outside the JSON.\n- Follow the structure exactly as defined above.\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -4176,
+        1568
+      ],
+      "id": "63bb3df0-b065-4e26-aaf9-21109a05056c",
+      "name": "Residency Agent"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "أنت وكيل متخصص (Identity Agent) مسؤول فقط عن خدمات الهوية الوطنية داخل منصة أبشر، مثل:\n- تجديد الهوية الوطنية\n\nيصل إليك الإدخال من Router Agent على شكل JSON يحتوي عادة على:\n{\n  \"action\": \"renew_id\",\n  \"domain\": \"identity\",\n  \"parameters\": {\n    \"nationalId\": \"...\",\n    \"missing_fields\": []\n  },\n  \"risk_level\": \"medium أو high\",\n  \"sessionId\": \"...\",\n  \"requestId\": \"...\"\n}\n\nمهمتك هي:\n\n1) التحقق أن action = \"renew_id\" وأن domain = \"identity\".\n\n2) التحقق من وجود nationalId داخل parameters والتأكد أنه ليس فارغاً.\n\n3) إذا كانت البيانات ناقصة، أرجع فقط JSON بهذا الشكل:\n{\n  \"can_execute\": false,\n  \"service\": \"renew_id\",\n  \"reason\": \"البيانات غير مكتملة، نحتاج رقم الهوية قبل تنفيذ تجديد الهوية.\",\n  \"sessionId\": \"<انسخ sessionId من الإدخال إن وجد>\",\n  \"requestId\": \"<انسخ requestId من الإدخال إن وجد>\"\n}\n\n4) إذا كانت البيانات كاملة وصحيحة، أرجع JSON جاهز للتنفيذ بهذا الشكل:\n{\n  \"can_execute\": true,\n  \"service\": \"renew_id\",\n  \"payload\": {\n    \"nationalId\": \"<من parameters>\"\n  },\n  \"sessionId\": \"<انسخ sessionId>\",\n  \"requestId\": \"<انسخ requestId>\"\n}\n\n5) إذا كانت action لا تساوي \"renew_id\" أو كان domain لا يساوي \"identity\"، فهذا يعني أن الطلب خارج نطاقك. في هذه الحالة أرجع:\n{\n  \"can_execute\": false,\n  \"service\": \"renew_id\",\n  \"reason\": \"هذه الخدمة ليست ضمن نطاق وكيل الهوية.\",\n  \"sessionId\": \"<انسخ sessionId>\",\n  \"requestId\": \"<انسخ requestId>\"\n}\n\nأرجع دائماً JSON صالح فقط بدون أي نص إضافي أو شرح خارجي.\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -4176,
+        1952
+      ],
+      "id": "9898f0b1-d725-445d-b584-2721ec4071ec",
+      "name": "Identity Agent"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "أنت وكيل متخصص (Traffic Agent) مسؤول فقط عن خدمات المرور داخل منصة أبشر، مثل:\n- حجز موعد لرخصة القيادة\n\nيصل إليك الإدخال من Router Agent على شكل JSON يحتوي عادة على:\n{\n  \"action\": \"book_license\",\n  \"domain\": \"traffic\",\n  \"parameters\": {\n    \"nationalId\": \"...\",\n    \"licenseType\": \"...\",\n    \"missing_fields\": []\n  },\n  \"risk_level\": \"low أو medium\",\n  \"sessionId\": \"...\",\n  \"requestId\": \"...\"\n}\n\nمهمتك هي:\n\n1) التحقق أن action = \"book_license\" وأن domain = \"traffic\".\n\n2) التحقق من اكتمال الحقول الأساسية داخل parameters:\n   - nationalId\n   - licenseType (مثل: خصوصي، نقل خفيف، ...)\n\n3) إذا كانت البيانات ناقصة، أرجع فقط JSON بالشكل التالي:\n{\n  \"can_execute\": false,\n  \"service\": \"book_license\",\n  \"reason\": \"البيانات غير مكتملة، نحتاج رقم الهوية ونوع الرخصة قبل حجز الموعد.\",\n  \"sessionId\": \"<انسخ sessionId من الإدخال إن وجد>\",\n  \"requestId\": \"<انسخ requestId من الإدخال إن وجد>\"\n}\n\n4) إذا كانت البيانات كاملة وصحيحة، أرجع JSON جاهز للتنفيذ بهذا الشكل:\n{\n  \"can_execute\": true,\n  \"service\": \"book_license\",\n  \"payload\": {\n    \"nationalId\": \"<من parameters>\",\n    \"licenseType\": \"<من parameters>\"\n  },\n  \"sessionId\": \"<انسخ sessionId>\",\n  \"requestId\": \"<انسخ requestId>\"\n}\n\n5) إذا كانت action لا تساوي \"book_license\" أو domain لا يساوي \"traffic\"، فهذا يعني أن الطلب ليس ضمن نطاقك. في هذه الحالة أرجع:\n{\n  \"can_execute\": false,\n  \"service\": \"book_license\",\n  \"reason\": \"هذه الخدمة ليست ضمن نطاق وكيل المرور.\",\n  \"sessionId\": \"<انسخ sessionId>\",\n  \"requestId\": \"<انسخ requestId>\"\n}\n\nأرجع دائماً JSON صالح فقط بدون أي نص حر إضافي.\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -4176,
+        2256
+      ],
+      "id": "8e24116f-7961-406f-81f8-bf6699978c52",
+      "name": "Traffic Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-robotics-er-1.5-preview",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -4176,
+        1760
+      ],
+      "id": "709a0ba2-3037-4ca6-9b28-5ba17bca1e3d",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "EYkPCKlEhOjBKqMU",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "absher-session",
+        "contextWindowLength": 16
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -4080,
+        1712
+      ],
+      "id": "5cda22fa-4e04-4496-afdb-e12ddd4ea577",
+      "name": "Simple Memory2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -4176,
+        2128
+      ],
+      "id": "c7754105-aa6d-4219-b45f-2cf70282b976",
+      "name": "Google Gemini Chat Model3",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "EYkPCKlEhOjBKqMU",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "absher-session"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -4080,
+        2096
+      ],
+      "id": "8b2a64a8-2e10-4968-836e-c584856ffee9",
+      "name": "Simple Memory3"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -4176,
+        2480
+      ],
+      "id": "3d055567-d5d4-4ab2-95d5-2b38d141d12d",
+      "name": "Google Gemini Chat Model4",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "EYkPCKlEhOjBKqMU",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "absher-session"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -4080,
+        2448
+      ],
+      "id": "2c9e7bc8-010f-424a-a010-f546d4b6a267",
+      "name": "Simple Memory4"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// 1) نقرأ ناتج الوكيل من الحقل output (جاينا كنص)\nlet raw = $json.output ?? $json;\n\nif (typeof raw === 'string') {\n  // نشيل ```json و ``` لو موجودة\n  raw = raw.replace(/```json/gi, '').replace(/```/g, '').trim();\n  try {\n    raw = JSON.parse(raw);\n  } catch (e) {\n    // لو ما قدرنا نفك الـ JSON نعتبره مرفوض\n    return {\n      json: {\n        decision: 'blocked',\n        guardrailReason: 'استجابة غير صالحة من الوكيل.',\n        rawOutput: $json.output ?? $json,\n      },\n    };\n  }\n}\n\n// الآن data هو الـ JSON الحقيقي من الوكيل\nconst data = raw;\n\n// --------------------------\n// 2) فحص الـ High-Risk (User-in-the-Loop)\n// --------------------------\nif (data.needsUserApproval === true && data.user_confirmation !== \"yes\") {\n  return {\n    json: {\n      ...data,\n      decision: \"await_user_confirmation\",\n      message: \"هذه العملية عالية الحساسية، هل تؤكد المتابعة؟\",\n    }\n  };\n}\n\n// لو المستخدم أكد \"yes\" نكمل\nif (data.needsUserApproval === true && data.user_confirmation === \"yes\") {\n  // نسمح بالتنفيذ الآن\n  return {\n    json: {\n      ...data,\n      decision: \"execute\",\n      message: \"تم التأكيد، جاري تنفيذ العملية.\"\n    }\n  };\n}\n\n// --------------------------\n// 3) إذا الوكيل وافق مباشرة (can_execute = true)\n// --------------------------\nif (data.can_execute === true) {\n  return {\n    json: {\n      ...data,\n      decision: 'execute',\n    },\n  };\n}\n\n// --------------------------\n// 4) لو رفض الوكيل\n// --------------------------\nreturn {\n  json: {\n    ...data,\n    decision: 'blocked',\n    guardrailReason:\n      data.reason || 'تم رفض الطلب من الوكيل.',\n  },\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3680,
+        1568
+      ],
+      "id": "8a2bde13-624e-4f29-ae33-43de4f215472",
+      "name": "Check Residency Decision",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// 1) نقرأ ناتج الوكيل من الحقل output (جاينا كنص)\nlet raw = $json.output ?? $json;\n\nif (typeof raw === 'string') {\n  // نشيل ```json و ``` لو موجودة\n  raw = raw.replace(/```json/gi, '').replace(/```/g, '').trim();\n  try {\n    raw = JSON.parse(raw);\n  } catch (e) {\n    // لو ما قدرنا نفك الـ JSON نعتبره مرفوض\n    return {\n      json: {\n        decision: 'blocked',\n        guardrailReason: 'استجابة غير صالحة من وكيل الهوية.',\n        rawOutput: $json.output ?? $json,\n      },\n    };\n  }\n}\n\n// الآن data هو الـ JSON الحقيقي من وكيل الهوية\nconst data = raw;\n\n// 2) إذا الوكيل وافق\nif (data.can_execute === true) {\n  return {\n    json: {\n      ...data,\n      decision: 'execute',\n    },\n  };\n}\n\n// 3) لو رفض\nreturn {\n  json: {\n    ...data,\n    decision: 'blocked',\n    guardrailReason:\n      data.reason || 'تم رفض الطلب من وكيل الهوية.',\n  },\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3664,
+        1952
+      ],
+      "id": "09c6b65a-d7dc-40fc-a088-e404c2360d29",
+      "name": "Check Identity Decision"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1) نقرأ ناتج الوكيل من الحقل output (جاينا كنص)\nlet raw = $json.output ?? $json;\n\nif (typeof raw === 'string') {\n  // نشيل ```json و ``` لو موجودة\n  raw = raw.replace(/```json/gi, '').replace(/```/g, '').trim();\n  try {\n    raw = JSON.parse(raw);\n  } catch (e) {\n    // لو ما قدرنا نفك الـ JSON نعتبره مرفوض\n    return {\n      json: {\n        decision: 'blocked',\n        guardrailReason: 'استجابة غير صالحة من وكيل المرور.',\n        rawOutput: $json.output ?? $json,\n      },\n    };\n  }\n}\n\n// الآن data هو الـ JSON الحقيقي من وكيل المرور\nconst data = raw;\n\n// 2) إذا الوكيل وافق\nif (data.can_execute === true) {\n  return {\n    json: {\n      ...data,\n      decision: 'execute',\n    },\n  };\n}\n\n// 3) لو رفض\nreturn {\n  json: {\n    ...data,\n    decision: 'blocked',\n    guardrailReason:\n      data.reason || 'تم رفض الطلب من وكيل المرور.',\n  },\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3680,
+        2256
+      ],
+      "id": "6b2dbee6-0b73-462a-bdd2-d95cc57fe2f5",
+      "name": "Check Traffic Decision"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "79466327-173b-423a-9efb-dd6b70938be4",
+              "leftValue": "={{$json[\"decision\"]}}",
+              "rightValue": "execute",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -3376,
+        1568
+      ],
+      "id": "930470b9-4676-474c-bc3c-b138fd2399b7",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "79466327-173b-423a-9efb-dd6b70938be4",
+              "leftValue": "={{$json[\"decision\"]}}",
+              "rightValue": "execute",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -3376,
+        1952
+      ],
+      "id": "fa652ade-6f5a-453a-87f5-8be85e1c70f6",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "79466327-173b-423a-9efb-dd6b70938be4",
+              "leftValue": "={{$json[\"decision\"]}}",
+              "rightValue": "execute",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -3376,
+        2256
+      ],
+      "id": "b2e1353f-90a9-429c-9b9d-9eb61f5aff5c",
+      "name": "If2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "7. Switch - Action": {
+      "main": [
+        [
+          {
+            "node": "Residency Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Identity Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Traffic Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "unknown action1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8c. Execute Renew Iqama": {
+      "main": [
+        [
+          {
+            "node": "9. Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Text1": {
+      "main": [
+        [
+          {
+            "node": "AI Router Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8e. Execute Book License": {
+      "main": [
+        [
+          {
+            "node": "9. Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8d. Execute Renew ID": {
+      "main": [
+        [
+          {
+            "node": "9. Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook - Absher1": {
+      "main": [
+        [
+          {
+            "node": "Prepare Text1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "unknown action1": {
+      "main": [
+        [
+          {
+            "node": "9. Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Router Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Router Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "normlizeResponse1": {
+      "main": [
+        [
+          {
+            "node": "Master Policy & Guardrails1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Master Policy & Guardrails1": {
+      "main": [
+        [
+          {
+            "node": "7. Switch - Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Router Agent": {
+      "main": [
+        [
+          {
+            "node": "normlizeResponse1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Identity Agent": {
+      "main": [
+        [
+          {
+            "node": "Check Identity Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Residency Agent": {
+      "main": [
+        [
+          {
+            "node": "Check Residency Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Traffic Agent": {
+      "main": [
+        [
+          {
+            "node": "Check Traffic Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Residency Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory2": {
+      "ai_memory": [
+        [
+          {
+            "node": "Residency Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Identity Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory3": {
+      "ai_memory": [
+        [
+          {
+            "node": "Identity Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Traffic Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory4": {
+      "ai_memory": [
+        [
+          {
+            "node": "Traffic Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Identity Decision": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Residency Decision": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Traffic Decision": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "8c. Execute Renew Iqama",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "unknown action1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "8d. Execute Renew ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "unknown action1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "8e. Execute Book License",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "unknown action1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "408ef1f2-f66d-468d-b297-ff8659c13e0e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8a2835377422b13022a76a490c03b09b37772fcfbad3241c37cee25f09270495"
+  },
+  "id": "V1gFpQm1YCsSJhrs",
+  "tags": []
+}
